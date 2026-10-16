@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "type": "reliability_exercise",
+  "generated_at_utc": "2026-10-16T00:43:59.747264+00:00",
+  "incident_id": "EXERCISE-crash",
+  "severity": "exercise",
+  "status": "recovered",
+  "scenario": "crash",
+  "impact": {
+    "production_customers": 0,
+    "local_fault_probe_statuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "timing": {
+    "recovery_seconds": 8.111649345999979,
+    "total_seconds": 11.548126809999985,
+    "max_fault_request_seconds": 0.0005103839999947013
+  },
+  "evidence_file": "results/failure-crash.json",
+  "root_cause": "Deliberate local crash injection",
+  "corrective_actions": [],
+  "limitations": [
+    "Controlled local experiment; not a production incident or availability estimate."
+  ]
+}

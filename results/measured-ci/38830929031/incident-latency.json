@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "type": "reliability_exercise",
+  "generated_at_utc": "2026-10-16T00:44:25.177565+00:00",
+  "incident_id": "EXERCISE-latency",
+  "severity": "exercise",
+  "status": "recovered",
+  "scenario": "latency",
+  "impact": {
+    "production_customers": 0,
+    "local_fault_probe_statuses": [
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503
+    ]
+  },
+  "timing": {
+    "recovery_seconds": 4.114916078000022,
+    "total_seconds": 9.610154560000012,
+    "max_fault_request_seconds": 1.0167752400000154
+  },
+  "evidence_file": "results/failure-latency.json",
+  "root_cause": "Deliberate local latency injection",
+  "corrective_actions": [],
+  "limitations": [
+    "Controlled local experiment; not a production incident or availability estimate."
+  ]
+}

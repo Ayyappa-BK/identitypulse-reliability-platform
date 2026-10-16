@@ -1,0 +1,21 @@
+{
+  "scenario": "database",
+  "fault_probe_statuses": [
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503
+  ],
+  "max_fault_request_seconds": 0.5154069920000097,
+  "recovery_seconds": 3.1146336660000316,
+  "total_seconds": 6.6702800489999845,
+  "recovered": true
+}

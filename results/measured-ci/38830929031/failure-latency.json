@@ -1,0 +1,21 @@
+{
+  "scenario": "latency",
+  "fault_probe_statuses": [
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503
+  ],
+  "max_fault_request_seconds": 1.0167752400000154,
+  "recovery_seconds": 4.114916078000022,
+  "total_seconds": 9.610154560000012,
+  "recovered": true
+}

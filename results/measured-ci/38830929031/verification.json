@@ -1,0 +1,39 @@
+{
+  "commit": "a5229cd7bd368073b43ca6e093cfb964f656e6e2",
+  "ci_url": "https://github.com/Ayyappa-BK/identitypulse-reliability-platform/actions/runs/38830929031",
+  "codeql_url": "https://github.com/Ayyappa-BK/identitypulse-reliability-platform/actions/runs/38830928954",
+  "ci_conclusion": "success",
+  "codeql_conclusion": "success",
+  "environment": "GitHub ubuntu-latest hosted x64 runner; Java 21; Docker Compose single app, PostgreSQL17, Redis7.4; no TLS ingress",
+  "suites": [
+    {
+      "name": "io.identitypulse.DependenciesIT",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "14.326"
+    },
+    {
+      "name": "io.identitypulse.PolicyStoreTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.787"
+    },
+    {
+      "name": "io.identitypulse.JwtSecurityTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "11.198"
+    }
+  ],
+  "availability_claim": null,
+  "tests": 17,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+}

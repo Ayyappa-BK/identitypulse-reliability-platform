@@ -1,0 +1,21 @@
+{
+  "scenario": "redis",
+  "fault_probe_statuses": [
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503
+  ],
+  "max_fault_request_seconds": 0.4401091309999856,
+  "recovery_seconds": 4.120997091999982,
+  "total_seconds": 8.744072538000012,
+  "recovered": true
+}

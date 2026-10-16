@@ -70,6 +70,12 @@ class JwtSecurityTest {
  }
  @Test void noScopeDenied() throws Exception { mvc.perform(post("/v1/auth/verify").header("Authorization","Bearer "+token("https://issuer.test","identitypulse",Instant.now().plusSeconds(120),"","alice","id-1",KEY))).andExpect(status().isForbidden()); verifyNoInteractions(policy); }
  @Test void adminRequiresSeparateScope() throws Exception { mvc.perform(get("/v1/admin/status").header("Authorization","Bearer "+good())).andExpect(status().isForbidden()); }
+ @Test void administratorAlsoRequiresCurrentPolicy() throws Exception {
+  String admin=token("https://issuer.test","identitypulse",Instant.now().plusSeconds(120),"identity:admin","alice","id-1",KEY);
+  when(policy.allowed("alice","id-1")).thenReturn(false).thenReturn(true);
+  mvc.perform(get("/v1/admin/status").header("Authorization","Bearer "+admin)).andExpect(status().isForbidden());
+  mvc.perform(get("/v1/admin/status").header("Authorization","Bearer "+admin)).andExpect(status().isOk());
+ }
  @Test void revokedOrDisabledDenied() throws Exception { when(policy.allowed(anyString(),anyString())).thenReturn(false); mvc.perform(post("/v1/auth/verify").header("Authorization","Bearer "+good())).andExpect(status().isForbidden()); }
  @Test void dependencyOutageFailsClosedThenRecovers() throws Exception {
   when(policy.allowed(anyString(),anyString())).thenThrow(new IllegalStateException("db down")).thenReturn(true);

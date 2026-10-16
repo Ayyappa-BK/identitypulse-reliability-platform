@@ -1,0 +1,21 @@
+{
+  "scenario": "crash",
+  "fault_probe_statuses": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "max_fault_request_seconds": 0.0005103839999947013,
+  "recovery_seconds": 8.111649345999979,
+  "total_seconds": 11.548126809999985,
+  "recovered": true
+}

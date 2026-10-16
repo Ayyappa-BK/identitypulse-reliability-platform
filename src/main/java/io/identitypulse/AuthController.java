@@ -24,5 +24,8 @@ public class AuthController {
    }
   });
  }
- @GetMapping("/v1/admin/status") public Map<String,String> status() { return Map.of("service", "identitypulse"); }
+ @GetMapping("/v1/admin/status") public ResponseEntity<Map<String,Object>> status(@AuthenticationPrincipal Jwt jwt) {
+  var decision = verify(jwt);
+  return decision.getStatusCode().is2xxSuccessful() ? ResponseEntity.ok(Map.of("service", "identitypulse")) : decision;
+ }
 }

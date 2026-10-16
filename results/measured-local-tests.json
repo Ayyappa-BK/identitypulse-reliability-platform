@@ -4,7 +4,7 @@
   "java": "Eclipse Temurin 21.0.12.1",
   "os": "macOS arm64",
   "command": "mvn -B test",
-  "tests": 16,
+  "tests": 17,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
@@ -15,15 +15,15 @@
       "failures": "0",
       "errors": "0",
       "skipped": "0",
-      "time": "0.432"
+      "time": "0.577"
     },
     {
       "name": "io.identitypulse.JwtSecurityTest",
-      "tests": "11",
+      "tests": "12",
       "failures": "0",
       "errors": "0",
       "skipped": "0",
-      "time": "4.204"
+      "time": "4.891"
     }
   ],
   "local_real_dependencies_tested": false,

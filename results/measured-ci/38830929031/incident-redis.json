@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "type": "reliability_exercise",
+  "generated_at_utc": "2026-10-16T00:44:15.443395+00:00",
+  "incident_id": "EXERCISE-redis",
+  "severity": "exercise",
+  "status": "recovered",
+  "scenario": "redis",
+  "impact": {
+    "production_customers": 0,
+    "local_fault_probe_statuses": [
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503,
+      503
+    ]
+  },
+  "timing": {
+    "recovery_seconds": 4.120997091999982,
+    "total_seconds": 8.744072538000012,
+    "max_fault_request_seconds": 0.4401091309999856
+  },
+  "evidence_file": "results/failure-redis.json",
+  "root_cause": "Deliberate local redis injection",
+  "corrective_actions": [],
+  "limitations": [
+    "Controlled local experiment; not a production incident or availability estimate."
+  ]
+}

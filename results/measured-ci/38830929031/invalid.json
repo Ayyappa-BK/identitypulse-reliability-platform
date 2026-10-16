@@ -1,0 +1,18 @@
+{
+  "timestamp_utc": "2026-10-16T00:43:48.022631+00:00",
+  "requests": 20,
+  "concurrency": 10,
+  "elapsed_seconds": 0.17012888599998632,
+  "throughput_rps": 117.55793193168624,
+  "status_counts": {
+    "401": 20
+  },
+  "latency_ms": {
+    "50": 20.350664000034158,
+    "95": 150.97342599995045,
+    "99": 157.79538099997126
+  },
+  "expected_status": 401,
+  "passed": true,
+  "method": "closed-loop urllib; end-to-end client wall-clock; no warmup"
+}
