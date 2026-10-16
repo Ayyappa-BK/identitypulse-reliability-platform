@@ -2,7 +2,7 @@
 
 ## Local verification — 2026-10-15 (America/Chicago)
 
-Executed on macOS arm64 using a workspace-local Eclipse Temurin JDK 21.0.12.1 and Maven. `mvn test` completed successfully: **15 tests, 0 failures, 0 errors, 0 skipped**. Suite wall time reported by Maven: **5.685 seconds**. Tests include a local JWKS HTTP server, real RSA signatures and Spring Security filter processing; PostgreSQL/Redis are mocked in this local suite. This is functional/security evidence, not production latency or availability evidence.
+Executed on macOS arm64 using a workspace-local Eclipse Temurin JDK 21.0.12.1 and Maven. `mvn test` completed successfully: **16 tests, 0 failures, 0 errors, 0 skipped**. Suite wall time reported by Maven: **5.808 seconds**. Tests include a local JWKS HTTP server, real RSA signatures and Spring Security filter processing; PostgreSQL/Redis are mocked in this local suite. This is functional/security evidence, not production latency or availability evidence.
 
 Helm 3.19.0 strict lint: **1 chart, 0 failures**. Prometheus 3.5.0 promtool: **7 rules valid**, alert unit test passed. Python scripts compile and security regression guards pass.
 
@@ -19,3 +19,5 @@ Docker, kubectl and Helm were not preinstalled. Helm/promtool were downloaded to
 * No external traffic, TLS ingress, multi-zone infrastructure, real IdP key-rotation exercise, long-duration soak or production pager delivery has been measured.
 
 **No observed 99.99% availability is claimed.** A short test interval, even with zero failures, cannot establish the rolling 30-day objective. The separate time budget is 259.2 seconds per 30 days; request budget is eligible requests × 0.0001.
+
+An additional real-JWKS outage test confirms that key-fetch infrastructure failure returns 503 rather than masking an outage as an invalid-credential 401.

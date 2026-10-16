@@ -32,3 +32,11 @@ Inspect scrape targets, collector health, ingress routing and probe freshness. M
 ## Recovery and closure
 
 Record failed and successful probes, fault start/end, time to detect, mitigation and recovery, peak impact and affected failure domains. Preserve CI/load JSON, traces and configuration hashes. Restore every injected toxic and stopped process. Update the incident report and RCA within two business days; assign owners and dates to corrective actions. Security lead approves closure of false-acceptance/revocation incidents.
+
+Generate a machine-readable exercise incident from a measured fault report:
+
+```sh
+python3 scripts/incident-report.py results/failure-database.json --output results/incident-database.json
+```
+
+The generator labels reports as exercises and records zero production customers; do not use that default for real incidents. Real incident reports must record reviewed impact and use the incident/RCA templates.

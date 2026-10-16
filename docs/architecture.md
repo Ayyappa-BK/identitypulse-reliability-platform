@@ -30,6 +30,8 @@ sequenceDiagram
  Security->>Security: signature, issuer, aud, exp, nbf, sub, jti, scope
  alt invalid or absent token
   Security-->>Client: 401
+ else issuer key retrieval unavailable
+  Security-->>Client: 503
  else insufficient scope
   Security-->>Client: 403
  else valid credential

@@ -15,6 +15,13 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 @Configuration
 public class SecurityConfig {
  @Bean SecurityFilterChain security(HttpSecurity http) throws Exception {
+  org.springframework.security.web.AuthenticationEntryPoint errors = (req, res, failure) -> {
+   if (failure instanceof org.springframework.security.authentication.AuthenticationServiceException) {
+    res.setStatus(503); res.setHeader("Retry-After", "5");
+   } else {
+    new org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint().commence(req, res, failure);
+   }
+  };
   return http.csrf(c -> c.disable())
    .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
    .authorizeHttpRequests(a -> a
@@ -22,7 +29,15 @@ public class SecurityConfig {
     .requestMatchers(HttpMethod.POST, "/v1/auth/verify").hasAuthority("SCOPE_identity:verify")
     .requestMatchers(HttpMethod.GET, "/v1/admin/status").hasAuthority("SCOPE_identity:admin")
     .anyRequest().denyAll())
-   .oauth2ResourceServer(o -> o.jwt(c -> {})).build();
+   .oauth2ResourceServer(o -> o.jwt(c -> {}).authenticationEntryPoint(errors)
+    .withObjectPostProcessor(new org.springframework.security.config.ObjectPostProcessor<org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter>() {
+     @Override public <O extends org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter> O postProcess(O filter) {
+      var handler = new org.springframework.security.web.authentication.AuthenticationEntryPointFailureHandler(errors);
+      handler.setRethrowAuthenticationServiceException(false);
+      filter.setAuthenticationFailureHandler(handler);
+      return filter;
+     }
+    })).build();
  }
  @Bean JwtDecoder jwtDecoder(@Value("${identity.issuer}") String issuer,
    @Value("${identity.jwks-uri}") String jwks, @Value("${identity.audience}") String audience) {

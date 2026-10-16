@@ -35,7 +35,7 @@ jobs:
         with: {version: v3.19.0}
       - run: helm lint deploy/helm/identitypulse --strict
       - run: helm template identitypulse deploy/helm/identitypulse --namespace identitypulse > /tmp/rendered.yaml && diff -u deploy/kubernetes/identitypulse.yaml /tmp/rendered.yaml
-      - run: docker run --rm -v "$PWD/observability:/etc/prometheus" --entrypoint promtool prom/prometheus:v3.5.0 check rules /etc/prometheus/alerts.yml
+      - run: docker run --rm -v "$PWD/observability:/etc/prometheus" --entrypoint promtool prom/prometheus:v3.5.0 check rules /etc/prometheus/alerts.yml /etc/prometheus/synthetic-alerts.yml
       - run: docker run --rm -v "$PWD/observability:/etc/prometheus" -w /etc/prometheus --entrypoint promtool prom/prometheus:v3.5.0 test rules alerts.test.yml
       - run: sh scripts/lab-up.sh
       - name: Load, deny, crash, dependency, latency and recovery assertions
@@ -45,6 +45,7 @@ jobs:
           TOKEN="$(python3 scripts/token.py --invalid)" python3 scripts/load.py --requests 20 --expect 401 --output results/invalid.json
           for scenario in crash database redis latency; do
             python3 scripts/failure-test.py "$scenario"
+            python3 scripts/incident-report.py "results/failure-$scenario.json" --output "results/incident-$scenario.json"
           done
           python3 scripts/load.py --requests 500 --concurrency 8 --output results/recovered.json
       - name: Save lab logs

@@ -22,12 +22,13 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties={"spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration", "management.tracing.sampling.probability=0", "management.endpoint.health.group.readiness.include=readinessState"})
 @AutoConfigureMockMvc
 class JwtSecurityTest {
+ static volatile boolean issuerUnavailable=false;
  static final RSAKey KEY; static final HttpServer JWKS;
  static {
   try {
    KEY=new RSAKeyGenerator(2048).keyID("test-key").generate();
    JWKS=HttpServer.create(new java.net.InetSocketAddress("127.0.0.1",0),0);
-   JWKS.createContext("/jwks", x -> { byte[] b=new JWKSet(KEY.toPublicJWK()).toString().getBytes(java.nio.charset.StandardCharsets.UTF_8); x.getResponseHeaders().set("Content-Type","application/json"); x.sendResponseHeaders(200,b.length); x.getResponseBody().write(b); x.close(); });
+   JWKS.createContext("/jwks", x -> { if (issuerUnavailable) { x.sendResponseHeaders(503,-1);x.close();return; } byte[] b=new JWKSet(KEY.toPublicJWK()).toString().getBytes(java.nio.charset.StandardCharsets.UTF_8); x.getResponseHeaders().set("Content-Type","application/json"); x.sendResponseHeaders(200,b.length); x.getResponseBody().write(b); x.close(); });
    JWKS.start();
   } catch(Exception e) { throw new ExceptionInInitializerError(e); }
  }
@@ -45,6 +46,14 @@ class JwtSecurityTest {
    .claim("scope",scope).build();
   var jwt=new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("test-key").build(),claims);
   jwt.sign(new RSASSASigner(key)); return jwt.serialize();
+ }
+ @Test void issuerFailureIs503RatherThanCredentialRejection() throws Exception {
+  var key=new RSAKeyGenerator(2048).keyID("uncached-key").generate();
+  var claims=new JWTClaimsSet.Builder().issuer("https://issuer.test").audience("identitypulse").subject("alice").jwtID("id-1").expirationTime(Date.from(Instant.now().plusSeconds(120))).claim("scope","identity:verify").build();
+  var jwt=new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("uncached-key").build(),claims); jwt.sign(new RSASSASigner(key));
+  issuerUnavailable=true;
+  try { mvc.perform(post("/v1/auth/verify").header("Authorization","Bearer "+jwt.serialize())).andExpect(status().isServiceUnavailable()); }
+  finally { issuerUnavailable=false; }
  }
  String good() throws Exception { return token("https://issuer.test","identitypulse",Instant.now().plusSeconds(120),"identity:verify","alice","id-1",KEY); }
  @Test void validSignedJwtAndPolicySucceed() throws Exception { when(policy.allowed("alice","id-1")).thenReturn(true); mvc.perform(post("/v1/auth/verify").header("Authorization","Bearer "+good())).andExpect(status().isOk()); }
