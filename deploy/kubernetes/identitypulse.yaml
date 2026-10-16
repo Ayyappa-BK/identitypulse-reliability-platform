@@ -1,0 +1,161 @@
+---
+# Source: identitypulse/templates/network-policy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: identitypulse
+spec:
+  podSelector:
+    matchLabels: {app: identitypulse}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: ingress-nginx}
+      ports: [{port: 8080, protocol: TCP}]
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: observability}
+      ports: [{port: 9090, protocol: TCP}]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: kube-system}
+      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: identitypulse}
+      ports: [{port: 5432, protocol: TCP}, {port: 6379, protocol: TCP}]
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: observability}
+      ports: [{port: 4318, protocol: TCP}]
+    - to:
+        - ipBlock: {cidr: 0.0.0.0/0, except: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16]}
+      ports: [{port: 443, protocol: TCP}]
+---
+# Source: identitypulse/templates/service.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: identitypulse
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels: {app: identitypulse}
+---
+# Source: identitypulse/templates/service.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: identitypulse
+automountServiceAccountToken: false
+---
+# Source: identitypulse/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: identitypulse
+spec:
+  selector: {app: identitypulse}
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+# Source: identitypulse/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identitypulse
+spec:
+  revisionHistoryLimit: 3
+  strategy:
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
+  selector:
+    matchLabels: {app: identitypulse}
+  template:
+    metadata:
+      labels: {app: identitypulse}
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+        prometheus.io/path: /actuator/prometheus
+    spec:
+      serviceAccountName: identitypulse
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 35
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {app: identitypulse}
+      containers:
+        - name: app
+          image: 'ghcr.io/ayyappa-bk/identitypulse-reliability-platform:1.0.0'
+          imagePullPolicy: IfNotPresent
+          ports:
+            - {name: http, containerPort: 8080}
+            - {name: management, containerPort: 9090}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            limits:
+              cpu: "1"
+              memory: 768Mi
+            requests:
+              cpu: 250m
+              memory: 384Mi
+          envFrom:
+            - secretRef: {name: identitypulse-secrets}
+          env:
+            - {name: JWT_ISSUER, value: "https://issuer.example.invalid"}
+            - {name: JWT_JWKS_URI, value: "https://issuer.example.invalid/.well-known/jwks.json"}
+            - {name: REDIS_HOST, value: "redis.identitypulse.svc.cluster.local"}
+            - {name: OTEL_ENDPOINT, value: "http://otel-collector.observability.svc.cluster.local:4318/v1/traces"}
+          startupProbe:
+            httpGet: {path: /actuator/health/liveness, port: management}
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: {path: /actuator/health/readiness, port: management}
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 2
+          livenessProbe:
+            httpGet: {path: /actuator/health/liveness, port: management}
+            timeoutSeconds: 2
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: tmp
+          emptyDir: {sizeLimit: 128Mi}
+---
+# Source: identitypulse/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: identitypulse
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: identitypulse}
+  minReplicas: 3
+  maxReplicas: 12
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60

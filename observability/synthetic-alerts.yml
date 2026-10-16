@@ -1,0 +1,15 @@
+groups:
+  - name: identitypulse-external
+    rules:
+      - alert: IdentityPulseExternalProbeFailing
+        expr: sum(increase(identity_synthetic_probes_total{outcome=~"failure|missed"}[2m])) > 0
+        for: 30s
+        labels: {severity: page}
+        annotations:
+          summary: External valid-credential authentication probe failed
+      - alert: IdentityPulseExternalProbeStale
+        expr: time() - identity_synthetic_last_observation_seconds > 60 or absent(identity_synthetic_last_observation_seconds)
+        for: 30s
+        labels: {severity: page}
+        annotations:
+          summary: External authentication probe missing or stale

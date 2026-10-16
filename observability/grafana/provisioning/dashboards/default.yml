@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: IdentityPulse
+    folder: IdentityPulse
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

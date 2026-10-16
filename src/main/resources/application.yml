@@ -1,0 +1,71 @@
+server:
+  port: 8080
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: 64
+    accept-count: 64
+    connection-timeout: 2s
+spring:
+  application:
+    name: identitypulse
+  lifecycle:
+    timeout-per-shutdown-phase: 25s
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 500
+      validation-timeout: 250
+      data-source-properties:
+        connectTimeout: 1
+        socketTimeout: 1
+        options: '-c statement_timeout=500'
+  jdbc:
+    template:
+      query-timeout: 1
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 200ms
+      connect-timeout: 200ms
+      lettuce:
+        shutdown-timeout: 100ms
+identity:
+  issuer: ${JWT_ISSUER}
+  jwks-uri: ${JWT_JWKS_URI}
+  audience: identitypulse
+management:
+  server:
+    port: 9090
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        readiness:
+          include: readinessState,db,redis
+        liveness:
+          include: livenessState
+  tracing:
+    sampling:
+      probability: ${TRACE_SAMPLE_RATE:0.1}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4318/v1/traces}
+logging:
+  structured:
+    format:
+      console: logstash
+  pattern:
+    correlation: '[traceId=%X{traceId:-} spanId=%X{spanId:-}] '

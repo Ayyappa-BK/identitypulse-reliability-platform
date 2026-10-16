@@ -1,0 +1,31 @@
+{
+  "date_local": "2026-10-15",
+  "timezone": "America/Chicago",
+  "java": "Eclipse Temurin 21.0.12.1",
+  "os": "macOS arm64",
+  "command": "mvn -B test",
+  "tests": 15,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "suites": [
+    {
+      "name": "io.identitypulse.PolicyStoreTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.403"
+    },
+    {
+      "name": "io.identitypulse.JwtSecurityTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "3.651"
+    }
+  ],
+  "local_real_dependencies_tested": false,
+  "observed_production_availability": null
+}

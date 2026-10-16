@@ -1,0 +1,68 @@
+name: identitypulse-lab
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: identitypulse
+      POSTGRES_USER: identitypulse
+      POSTGRES_PASSWORD: ${LAB_DB_PASSWORD:?Run scripts/lab-init.sh}
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U identitypulse']
+      interval: 2s
+      retries: 30
+    volumes: [pgdata:/var/lib/postgresql/data]
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 2s
+      retries: 30
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    ports: ['127.0.0.1:8474:8474']
+  issuer:
+    image: python:3.13-alpine
+    command: [python, -m, http.server, '8000', --directory, /keys]
+    volumes: [./.local/public:/keys:ro]
+  app:
+    build: .
+    environment:
+      DB_URL: jdbc:postgresql://toxiproxy:15432/identitypulse
+      DB_USER: identitypulse
+      DB_PASSWORD: ${LAB_DB_PASSWORD:?Run scripts/lab-init.sh}
+      REDIS_HOST: toxiproxy
+      REDIS_PORT: 16379
+      JWT_ISSUER: http://issuer:8000
+      JWT_JWKS_URI: http://issuer:8000/jwks.json
+      OTEL_ENDPOINT: http://otel:4318/v1/traces
+      TRACE_SAMPLE_RATE: '1.0'
+    ports: ['127.0.0.1:8080:8080', '127.0.0.1:9090:9090']
+    restart: unless-stopped
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      issuer: {condition: service_started}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    volumes: [./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro, ./observability/alerts.yml:/etc/prometheus/alerts.yml:ro]
+    ports: ['127.0.0.1:9091:9090']
+  grafana:
+    image: grafana/grafana:12.2.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${LAB_GRAFANA_PASSWORD:?Run scripts/lab-init.sh}
+    volumes: [./observability/grafana/provisioning:/etc/grafana/provisioning:ro, ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro]
+    ports: ['127.0.0.1:3000:3000']
+  otel:
+    image: otel/opentelemetry-collector-contrib:0.135.0
+    command: [--config=/etc/otel/config.yml]
+    volumes: [./observability/otel.yml:/etc/otel/config.yml:ro]
+  tempo:
+    image: grafana/tempo:2.9.0
+    command: [-config.file=/etc/tempo.yml]
+    volumes: [./observability/tempo.yml:/etc/tempo.yml:ro]
+volumes:
+  pgdata: {}

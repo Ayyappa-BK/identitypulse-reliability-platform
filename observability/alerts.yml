@@ -1,0 +1,38 @@
+groups:
+  - name: identitypulse
+    rules:
+      - record: identitypulse:error_ratio_5m
+        expr: sum(rate(identity_auth_requests_total{outcome="error"}[5m])) / sum(rate(identity_auth_requests_total[5m]))
+      - record: identitypulse:error_ratio_1h
+        expr: sum(rate(identity_auth_requests_total{outcome="error"}[1h])) / sum(rate(identity_auth_requests_total[1h]))
+      - alert: IdentityPulseFastBudgetBurn
+        expr: identitypulse:error_ratio_5m > (14.4 * 0.0001) and identitypulse:error_ratio_1h > (14.4 * 0.0001)
+        for: 2m
+        labels: {severity: page}
+        annotations:
+          summary: Authentication is consuming the 30-day error budget rapidly
+          runbook_url: https://github.com/Ayyappa-BK/identitypulse-reliability-platform/blob/main/docs/runbooks.md
+      - alert: IdentityPulseSlowBudgetBurn
+        expr: (sum(rate(identity_auth_requests_total{outcome="error"}[30m])) / sum(rate(identity_auth_requests_total[30m])) > 0.0006) and (sum(rate(identity_auth_requests_total{outcome="error"}[6h])) / sum(rate(identity_auth_requests_total[6h])) > 0.0006)
+        for: 15m
+        labels: {severity: ticket}
+        annotations:
+          summary: Authentication sustained budget burn exceeds 6x
+      - alert: IdentityPulseTargetDown
+        expr: up{job="identitypulse"} == 0 or absent(up{job="identitypulse"})
+        for: 30s
+        labels: {severity: page}
+        annotations:
+          summary: Authentication telemetry target unavailable or missing
+      - alert: IdentityPulseNoTraffic
+        expr: sum(increase(identity_auth_requests_total[10m])) == 0 or absent(identity_auth_requests_total)
+        for: 5m
+        labels: {severity: ticket}
+        annotations:
+          summary: No authentication traffic; inspect synthetic probe and ingestion
+      - alert: IdentityPulseLatency
+        expr: histogram_quantile(0.99, sum by(le)(rate(identity_auth_duration_seconds_bucket[5m]))) > 0.3
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: p99 authentication latency exceeds 300ms

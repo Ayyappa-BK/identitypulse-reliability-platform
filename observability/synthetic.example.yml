@@ -1,0 +1,6 @@
+# Merge with production Prometheus config. Protect metrics using firewall/mTLS proxy.
+scrape_configs:
+  - job_name: identitypulse-external
+    static_configs:
+      - targets: [YOUR_INDEPENDENT_PROBE_HOST:9115]
+rule_files: [synthetic-alerts.yml]
