@@ -17,7 +17,7 @@ cd identitypulse-reliability-platform
 mvn -B test                 # unit + signed JWT / Spring Security tests, no Docker
 mvn -B verify               # also REQUIRED Testcontainers PostgreSQL/Redis tests
 sh scripts/lab-up.sh        # keys/secrets, proxy setup, build, migrations, fixture account
-export TOKEN="$(python3 scripts/token.py)"
+export TOKEN="$(python3 scripts/lab-token.py)"
 curl -i -X POST -H "Authorization: Bearer $TOKEN" http://localhost:8080/v1/auth/verify
 python3 scripts/load.py --requests 1000 --concurrency 10
 for scenario in crash database redis latency; do
@@ -26,7 +26,7 @@ done
 python3 scripts/load.py --output results/recovered.json
 ```
 
-Tokens expire after 15 minutes; refresh `TOKEN` before rerunning. A valid signature alone does not enable an unknown account. `load-user` is inserted only by the explicit lab script. `scripts/token.py --invalid` generates a signed wrong-audience token for rejection tests. The admin scope is separate (`--admin`). Keep tokens out of logs and shell tracing.
+Tokens expire after 15 minutes; refresh `TOKEN` before rerunning. A valid signature alone does not enable an unknown account. `load-user` is inserted only by the explicit lab script. `scripts/lab-token.py --invalid` generates a signed wrong-audience token for rejection tests. The admin scope is separate (`--admin`). Keep tokens out of logs and shell tracing.
 
 Open Grafana at http://localhost:3000 (admin; password in `.env`), Prometheus at http://localhost:9091 and probes at http://localhost:9090/actuator/health/readiness. Grafana provisions the health dashboard and Tempo trace datasource. The local trace sample rate is 100%; the application default is 10%. Trace spans contain no tokens or subject identifiers. `docker compose down -v` removes the lab and its database volume; `.local` and `.env` remain for intentional reuse.
 

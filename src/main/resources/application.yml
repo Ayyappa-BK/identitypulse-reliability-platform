@@ -22,6 +22,7 @@ spring:
       validation-timeout: 250
       data-source-properties:
         connectTimeout: 1
+        loginTimeout: 2
         socketTimeout: 1
         options: '-c statement_timeout=500'
   jdbc:
@@ -60,9 +61,11 @@ management:
   tracing:
     sampling:
       probability: ${TRACE_SAMPLE_RATE:0.1}
-  otlp:
+  opentelemetry:
     tracing:
-      endpoint: ${OTEL_ENDPOINT:http://localhost:4318/v1/traces}
+      export:
+        otlp:
+          endpoint: ${OTEL_ENDPOINT:http://localhost:4318/v1/traces}
 logging:
   structured:
     format:

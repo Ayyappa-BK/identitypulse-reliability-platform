@@ -12,12 +12,12 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-@Tag("integration") @Testcontainers
+@Tag("integration") @Testcontainers @Timeout(90)
 class DependenciesIT {
  @Container static PostgreSQLContainer<?> postgres=new PostgreSQLContainer<>("postgres:17-alpine");
  @Container static GenericContainer<?> redis=new GenericContainer<>("redis:7.4-alpine").withExposedPorts(6379);
  @Test void realDependenciesRevocationOutageAndRecovery() throws Exception {
-  var db=new JdbcTemplate(new DriverManagerDataSource(postgres.getJdbcUrl()+"?socketTimeout=1",postgres.getUsername(),postgres.getPassword()));
+  var db=new JdbcTemplate(new DriverManagerDataSource(postgres.getJdbcUrl()+"?connectTimeout=1&socketTimeout=1&loginTimeout=2",postgres.getUsername(),postgres.getPassword()));
   db.execute("CREATE TABLE principals(subject varchar(200) primary key, enabled boolean not null default false)");
   db.update("INSERT INTO principals VALUES (?,true)","alice");
   var cfg=new RedisStandaloneConfiguration(redis.getHost(),redis.getMappedPort(6379));
